@@ -153,7 +153,7 @@ class SettingsPage(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Kinetic Finance")
+        self.setWindowTitle("Family Finance AI")
         self.setGeometry(0, 0, 1920, 1080)
 
         self.repo = FinanceRepository()
