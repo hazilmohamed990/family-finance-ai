@@ -3,7 +3,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout,
     QVBoxLayout, QPushButton, QLabel, QStackedWidget, QLineEdit,
-    QGroupBox, QFileDialog, QCheckBox, QInputDialog, QSizePolicy, QSpacerItem, QGraphicsDropShadowEffect
+    QGroupBox, QFileDialog, QCheckBox, QInputDialog, QSizePolicy, QSpacerItem, QGraphicsDropShadowEffect, QMessageBox
 )
 from PyQt5.QtCore import Qt, QSize, QSettings
 from PyQt5.QtGui import QPixmap, QIcon, QFont, QColor
