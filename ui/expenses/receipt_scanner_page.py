@@ -1,7 +1,9 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, QTextEdit, QHBoxLayout, QMessageBox
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
-import os
+import os, shutil
+from datetime import datetime, shutil
+from datetime import datetime
 
 from ai.receipt_scanner_impl import ReceiptScanner
 
@@ -74,7 +76,20 @@ class ReceiptScannerPage(QWidget):
             return
         p = self.last_parsed
         try:
-            rid = self.repo.add_receipt(1, p.get('merchant'), p.get('date'), p.get('total') or 0.0, p.get('tax'), p.get('payment_method'), self.image_path, p.get('ocr_text'))
+            receipts_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'receipts')
+            receipts_dir = os.path.abspath(receipts_dir)
+            os.makedirs(receipts_dir, exist_ok=True)
+            basename = os.path.basename(self.image_path) if self.image_path else f'receipt_{int(datetime.now().timestamp())}.png'
+            safe_name = f"{int(datetime.now().timestamp())}_{basename}"
+            dest = os.path.join(receipts_dir, safe_name)
+            if self.image_path and os.path.exists(self.image_path):
+                try:
+                    shutil.copy2(self.image_path, dest)
+                except Exception:
+                    dest = self.image_path
+            else:
+                dest = self.image_path
+            rid = self.repo.add_receipt(1, p.get('merchant'), p.get('date'), p.get('total') or 0.0, p.get('tax'), p.get('payment_method'), dest, p.get('ocr_text'))
             QMessageBox.information(self, 'Saved', f'Receipt saved with id {rid}')
             for cb in self.refresh_callbacks:
                 cb()
