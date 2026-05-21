@@ -1,4 +1,4 @@
-﻿from database.db import Database
+from database.db import Database
 
 
 class FinanceRepository:
@@ -33,3 +33,22 @@ class FinanceRepository:
         expenses = self.db.get_expenses(user_id)
         income = self.db.get_income_total(user_id)
         return income, [{"category": row[1], "amount": row[2], "date": row[3], "description": row[4]} for row in expenses]
+
+    def add_receipt(self, user_id, merchant, date, total, tax=None, payment_method=None, image_path=None, ocr_text=None):
+        return self.db.add_receipt(user_id, merchant, date, total, tax, payment_method, image_path, ocr_text)
+
+    def get_receipts(self, user_id, limit=100):
+        return self.db.get_receipts(user_id, limit)
+
+    def get_receipt_by_id(self, receipt_id):
+        return self.db.get_receipt_by_id(receipt_id)
+
+    def add_ocr_history(self, receipt_id, ocr_text):
+        return self.db.add_ocr_history(receipt_id, ocr_text)
+
+    def add_ai_analysis(self, receipt_id, analysis_text, score=None, metadata=None):
+        return self.db.add_ai_analysis(receipt_id, analysis_text, score, metadata)
+
+    def get_ai_analysis(self, receipt_id):
+        return self.db.get_ai_analysis(receipt_id)
+

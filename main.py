@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout,
@@ -14,6 +14,7 @@ from core.data_service import DataService
 from database.queries import FinanceRepository
 from ui.dashboard.dashboard_page import DashboardPage
 from ui.expenses.expenses_page import ExpensesPage
+from ui.expenses.receipt_scanner_page import ReceiptScannerPage
 
 
 class Sidebar(QWidget):
@@ -48,6 +49,7 @@ class Sidebar(QWidget):
         btn_income = create_button("assets/icons/income.png", 2)
         btn_ai = create_button("assets/icons/ai.png", 3)
         btn_settings = create_button("assets/icons/settings.png", 4)
+        btn_receipts = create_button("assets/icons/expenses.png", 5)
 
         layout.addWidget(title)
         layout.addSpacing(12)
@@ -56,6 +58,7 @@ class Sidebar(QWidget):
         layout.addWidget(btn_income)
         layout.addWidget(btn_ai)
         layout.addWidget(btn_settings)
+        layout.addWidget(btn_receipts)
         layout.addStretch()
 
         self.setLayout(layout)
@@ -455,6 +458,7 @@ class MainWindow(QMainWindow):
             refresh_callbacks=[self.dashboard.refresh, self.ai.load_ai]
         )
         self.income = IncomePage(self.repo, self.ai.load_ai)
+        self.receipts = ReceiptScannerPage(self.repo, refresh_callbacks=[self.dashboard.refresh, self.ai.load_ai])
         self.settings = SettingsPage()
 
         self.stack = QStackedWidget()
@@ -463,6 +467,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.income)
         self.stack.addWidget(self.ai)
         self.stack.addWidget(self.settings)
+        self.stack.addWidget(self.receipts)
 
         self.sidebar = Sidebar(self.switch_page)
         self.sidebar.setFixedWidth(220)

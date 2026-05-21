@@ -100,3 +100,10 @@ class DataService:
             balance_history.append(cumulative)
 
         return months, balance_history
+
+    def add_receipt(self, merchant: str, date: str, total: float, tax: float = None, payment_method: str = None, image_path: str = None, ocr_text: str = None):
+        return self.repo.add_receipt(self.user_id, merchant, date, total, tax, payment_method, image_path, ocr_text)
+
+    def get_receipts(self, limit: int = 100):
+        return self.repo.get_receipts(self.user_id, limit)
+
