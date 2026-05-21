@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, QTextEdit, QHBoxLayout, QMessageBox
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
-import os, shutil
-from datetime import datetime, shutil
+import os, shutil, tempfile, time
 from datetime import datetime
 
 from ai.receipt_scanner_impl import ReceiptScanner
@@ -25,11 +24,14 @@ class ReceiptScannerPage(QWidget):
         btn_layout = QHBoxLayout()
         self.upload_btn = QPushButton('Upload Image')
         self.upload_btn.clicked.connect(self.upload_image)
+        self.webcam_btn = QPushButton('Scan Webcam')
+        self.webcam_btn.clicked.connect(self.scan_webcam)
         self.scan_btn = QPushButton('Scan Receipt')
         self.scan_btn.clicked.connect(self.scan_receipt)
         self.save_btn = QPushButton('Save to Database')
         self.save_btn.clicked.connect(self.save_receipt)
         btn_layout.addWidget(self.upload_btn)
+        btn_layout.addWidget(self.webcam_btn)
         btn_layout.addWidget(self.scan_btn)
         btn_layout.addWidget(self.save_btn)
         layout.addLayout(btn_layout)
@@ -90,6 +92,32 @@ class ReceiptScannerPage(QWidget):
             self.result_area.setPlainText('\n'.join(txt))
         except Exception as e:
             QMessageBox.critical(self, 'Scan Error', f'Scan failed: {e}')
+
+    def scan_webcam(self):
+        try:
+            import cv2
+        except Exception:
+            QMessageBox.warning(self, 'Webcam', 'OpenCV is not available for webcam scanning.')
+            return
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            QMessageBox.warning(self, 'Webcam', 'Unable to open webcam.')
+            return
+        ret, frame = cap.read()
+        cap.release()
+        if not ret:
+            QMessageBox.warning(self, 'Webcam', 'Failed to capture frame.')
+            return
+        tmp = os.path.join(tempfile.gettempdir(), f'receipt_{int(time.time())}.jpg')
+        try:
+            cv2.imwrite(tmp, frame)
+        except Exception:
+            QMessageBox.warning(self, 'Webcam', 'Failed to write temporary image.')
+            return
+        self.image_path = tmp
+        pix = QPixmap(tmp).scaled(self.preview.width(), self.preview.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.preview.setPixmap(pix)
+        self.scan_receipt()
 
     def save_receipt(self):
         if not hasattr(self, 'last_parsed') or not self.last_parsed:
