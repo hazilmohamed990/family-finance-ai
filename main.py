@@ -2,7 +2,7 @@ import sys
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout,
-    QVBoxLayout, QPushButton, QLabel, QStackedWidget, QLineEdit,
+    QVBoxLayout, QPushButton, QLabel, QStackedWidget, QLineEdit, QTextEdit,
     QGroupBox, QFileDialog, QCheckBox, QInputDialog, QSizePolicy, QSpacerItem, QGraphicsDropShadowEffect, QMessageBox
 )
 from PyQt5.QtCore import Qt, QSize, QSettings
@@ -114,33 +114,59 @@ class AIAssistantPage(QWidget):
     def __init__(self, repo):
         super().__init__()
         self.repo = repo
+        try:
+            from ai.chatbot import FinanceChatbot
+            self.chatbot = FinanceChatbot()
+        except Exception:
+            self.chatbot = None
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(24, 24, 24, 24)
-
-        self.label = QLabel()
-        self.label.setAlignment(Qt.AlignTop)
-        self.label.setWordWrap(True)
-        self.label.setStyleSheet("font-size: 16px; line-height: 1.5;")
-
-        layout.addWidget(self.label)
+        header = QLabel('AI Assistant')
+        header.setStyleSheet('font-size:20px; font-weight:800;')
+        self.chat_area = QTextEdit()
+        self.chat_area.setReadOnly(True)
+        self.input_line = QLineEdit()
+        self.input_line.setPlaceholderText('Ask about budgeting, spending, or upload receipts for analysis')
+        send_btn = QPushButton('Send')
+        send_btn.clicked.connect(self.send_message)
+        input_layout = QHBoxLayout()
+        input_layout.addWidget(self.input_line)
+        input_layout.addWidget(send_btn)
+        layout.addWidget(header)
+        layout.addWidget(self.chat_area)
+        layout.addLayout(input_layout)
         self.setLayout(layout)
-        self.load_ai()
+        self.load_ai_summary()
 
-    def load_ai(self):
-        income, expenses = self.repo.get_financial_data(1)
-        analyzer = FinanceAnalyzer(income, expenses)
+    def load_ai_summary(self):
+        try:
+            income, expenses = self.repo.get_financial_data(1)
+            analyzer = FinanceAnalyzer(income, expenses)
+            text = f"Account summary — Income: ${income:,.2f}  Expenses: ${analyzer.total_expenses():,.2f}  Savings: ${analyzer.savings():,.2f}\n"
+            for insight in analyzer.insights():
+                text += f"• {insight}\n"
+            self.chat_area.append(text)
+        except Exception:
+            self.chat_area.append('Unable to load financial summary.')
 
-        text = f"Income: ${income:,.2f}\n"
-        text += f"Expenses: ${analyzer.total_expenses():,.2f}\n"
-        text += f"Savings: ${analyzer.savings():,.2f}\n\n"
-
-        for insight in analyzer.insights():
-            text += f"• {insight}\n"
-
-        self.label.setText(text)
+    def send_message(self):
+        message = self.input_line.text().strip()
+        if not message:
+            return
+        self.chat_area.append(f"You: {message}")
+        self.input_line.clear()
+        if not self.chatbot:
+            self.chat_area.append('AI assistant unavailable (OpenAI not configured).')
+            return
+        try:
+            income, expenses = self.repo.get_financial_data(1)
+            response = self.chatbot.respond(message, income=income, expenses=expenses)
+            self.chat_area.append(f"Assistant: {response}")
+        except Exception as e:
+            self.chat_area.append(f"Assistant (error): {e}")
 
 
 class SettingsPage(QWidget):
