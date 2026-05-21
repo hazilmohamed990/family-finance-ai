@@ -6,6 +6,7 @@ from datetime import datetime, shutil
 from datetime import datetime
 
 from ai.receipt_scanner_impl import ReceiptScanner
+from ai.recommendations_impl import Recommendations
 
 class ReceiptScannerPage(QWidget):
     def __init__(self, repo, refresh_callbacks=None):
@@ -66,6 +67,26 @@ class ReceiptScannerPage(QWidget):
             for it in parsed.get('items', []):
                 txt.append(f" - {it.get('name')} : {it.get('price')}")
             self.last_parsed = parsed
+            income = 0.0
+            try:
+                income = self.repo.get_income_total(1)
+            except Exception:
+                income = 0.0
+            expenses_rows = []
+            try:
+                expenses_rows = self.repo.get_expenses(1)
+            except Exception:
+                expenses_rows = []
+            expenses_total = sum([r[2] for r in expenses_rows]) if expenses_rows else 0.0
+            try:
+                rec = Recommendations().analyze_receipt(parsed, income, expenses_total)
+                txt.append('\nAI Analysis:')
+                txt.append(f" - Necessary: {rec.get('necessary')}")
+                txt.append(f" - Avoidable: {rec.get('avoidable')}")
+                txt.append(f" - Excessive: {rec.get('excessive')}")
+                txt.append(f" - Suggestion: {rec.get('suggestion')}")
+            except Exception:
+                pass
             self.result_area.setPlainText('\n'.join(txt))
         except Exception as e:
             QMessageBox.critical(self, 'Scan Error', f'Scan failed: {e}')
