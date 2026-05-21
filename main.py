@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout,
@@ -481,10 +481,10 @@ class MainWindow(QMainWindow):
         self.ai = AIAssistantPage(self.repo)
         self.expenses = ExpensesPage(
             self.repo,
-            refresh_callbacks=[self.dashboard.refresh, self.ai.load_ai]
+            refresh_callbacks=[self.dashboard.refresh, self.ai.load_ai_summary]
         )
-        self.income = IncomePage(self.repo, self.ai.load_ai)
-        self.receipts = ReceiptScannerPage(self.repo, refresh_callbacks=[self.dashboard.refresh, self.ai.load_ai])
+        self.income = IncomePage(self.repo, self.ai.load_ai_summary)
+        self.receipts = ReceiptScannerPage(self.repo, refresh_callbacks=[self.dashboard.refresh, self.ai.load_ai_summary])
         self.settings = SettingsPage()
 
         self.stack = QStackedWidget()
