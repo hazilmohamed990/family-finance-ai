@@ -1,3 +1,13 @@
 ﻿pyqt5
 matplotlib
 seaborn
+opencv-python
+pytesseract
+pillow
+numpy
+openai
+python-dotenv
+scikit-learn
+
+matplotlib
+seaborn
