@@ -92,15 +92,14 @@ class BorderRadius:
 class Fonts:
     """Font configurations"""
     
-    FAMILY_PRIMARY = "SF Pro Display"
+    FAMILY_PRIMARY = "SF Pro"
     FAMILY_FALLBACK = "Segoe UI"
     
     @staticmethod
-    def get_font(size: int, weight: int = QFont.Normal, italic: bool = False) -> QFont:
+    def get_font(size: int, weight: int = QFont.Bold, italic: bool = False) -> QFont:
         """Get configured font"""
         font = QFont(Fonts.FAMILY_PRIMARY, size)
-        if font.family() != Fonts.FAMILY_PRIMARY:
-            font.setFamily(Fonts.FAMILY_FALLBACK)
+        font.setFamily(Fonts.FAMILY_FALLBACK)
         font.setWeight(weight)
         font.setItalic(italic)
         return font

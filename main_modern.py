@@ -1,19 +1,17 @@
-"""
-Family Finance AI - Premium Desktop Application
-Modern PyQt5 UI with fintech-grade styling
-"""
+
+
+import warnings
+warnings.filterwarnings("ignore")
 
 import sys
 import os
 
-# Add project to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon
 
-# Import new modern components
 from ui.theme import GLOBAL_STYLESHEET, Colors, Fonts
 from ui.sidebar import ModernSidebar
 from ui.dashboard import DashboardPage
@@ -22,7 +20,6 @@ from ui.ai_assistant import ModernAIAssistantPage
 from ui.receipt_scanner import ModernReceiptScannerPage
 from ui.settings import ModernSettingsPage
 
-# Import data services
 from ai.analyzer import FinanceAnalyzer
 from core.data_service import DataService
 from database.queries import FinanceRepository
@@ -99,17 +96,14 @@ class MainWindow(QMainWindow):
             main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.setSpacing(0)
             
-            # Sidebar
             self.sidebar = ModernSidebar()
             self.sidebar.setFixedWidth(200)
             self.sidebar.page_switched.connect(self._switch_page)
             
-            # Stack widget for pages
             self.stack = QStackedWidget()
             for page in self.pages:
                 self.stack.addWidget(page)
             
-            # Add to layout
             main_layout.addWidget(self.sidebar)
             main_layout.addWidget(self.stack, 1)
             
@@ -138,7 +132,6 @@ def main():
     app.setFont(Fonts.body_base())
     
     try:
-        # Create and show main window
         window = MainWindow()
         window.show()
         
