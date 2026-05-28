@@ -1,4 +1,4 @@
-﻿"""
+"""
 Family Finance AI - Premium Desktop Application
 Modern PyQt5 UI with fintech-grade styling
 """
