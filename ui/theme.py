@@ -1,56 +1,108 @@
 """
-Premium Fintech Theme System
-Inspired by modern fintech dashboards and macOS aesthetics
+Premium Fintech Theme System - Apple-Inspired Green + White
+Production-ready theme for premium fintech applications
+Forces SF Pro font globally with macOS aesthetics
 """
 
-from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtGui import QFont, QColor, QFontDatabase
 from PyQt5.QtCore import Qt
+import os
 
 # ============================================================================
-# COLOR PALETTE
+# FONT SYSTEM - GLOBAL SF PRO INTEGRATION
+# ============================================================================
+
+class FontManager:
+    """Manages SF Pro font loading and ensures global application"""
+    
+    FONT_PATH = "assets/fonts/SF-Pro.ttf"
+    FONT_FAMILY = None
+    _font_id = None
+    
+    @staticmethod
+    def load_font():
+        """Load SF Pro font globally and record family name"""
+        if FontManager._font_id is None:
+            if os.path.exists(FontManager.FONT_PATH):
+                FontManager._font_id = QFontDatabase.addApplicationFont(FontManager.FONT_PATH)
+                if FontManager._font_id != -1:
+                    font_families = QFontDatabase.applicationFontFamilies(FontManager._font_id)
+                    if font_families:
+                        FontManager.FONT_FAMILY = font_families[0]
+                        return True
+            return False
+        return True
+
+# ============================================================================
+# COLOR PALETTE - PREMIUM GREEN + WHITE FINTECH THEME
 # ============================================================================
 
 class Colors:
-    # Backgrounds
-    BG_PRIMARY = "#FAFBFC"  # Soft white background
-    BG_SECONDARY = "#FFFFFF"  # Card/panel white
-    BG_TERTIARY = "#F5F7FA"  # Subtle background
+    # PRIMARY GREENS - Apple-Inspired Fintech
+    GREEN_PRIMARY = "#00A876"      # Primary action green (premium, bold)
+    GREEN_SECONDARY = "#06B078"    # Secondary green (slightly lighter)
+    GREEN_LIGHT = "#34C759"        # Light green (accent)
+    GREEN_ULTRA_LIGHT = "#D1FAE5"  # Ultra light (backgrounds)
     
-    # Text
-    TEXT_PRIMARY = "#1A1F2E"  # Deep charcoal
-    TEXT_SECONDARY = "#6B7280"  # Medium gray
-    TEXT_TERTIARY = "#9CA3AF"  # Light gray
-    TEXT_LIGHT = "#E5E7EB"  # Very light gray
+    # DARK GREENS - Premium text and accents
+    GREEN_DARK = "#065F46"         # Deep forest green (dark mode friendly)
+    GREEN_DARKER = "#041E1A"       # Ultra dark green (text alternative)
     
-    # Semantic Colors
-    INCOME = "#10B981"  # Emerald green
-    EXPENSE = "#EF4444"  # Red
-    SAVINGS = "#3B82F6"  # Blue
-    NEUTRAL = "#8B5CF6"  # Purple
+    # SEMANTIC GREENS
+    SUCCESS = "#10B981"             # Success/positive indicator
+    INCOME = "#06B078"              # Income - green theme
+    SAVINGS = "#00A876"             # Savings - primary green
     
-    # Charts
-    CHART_1 = "#3B82F6"  # Blue
-    CHART_2 = "#10B981"  # Green
-    CHART_3 = "#F59E0B"  # Amber
-    CHART_4 = "#EF4444"  # Red
-    CHART_5 = "#8B5CF6"  # Purple
-    CHART_6 = "#EC4899"  # Pink
+    # FINANCIAL INDICATORS
+    EXPENSE = "#DC2626"             # Expense - red (important)
+    WARNING = "#F59E0B"             # Warning - amber
+    ALERT = "#EF4444"               # Alert - red
+    ERROR = ALERT
+    INFO = "#10B981"
     
-    # Interactive
-    ACCENT = "#3B82F6"  # Primary accent
-    HOVER = "#E0F2FE"  # Hover state
-    FOCUS = "#0EA5E9"  # Focus state
-    DISABLED = "#D1D5DB"  # Disabled state
+    # BACKGROUNDS
+    BG_PRIMARY = "#FAFBFC"          # Soft white background
+    BG_SECONDARY = "#FFFFFF"        # Card/panel white
+    BG_TERTIARY = "#F3F4F6"         # Subtle background
+    BG_HOVER = "#E8F5E9"            # Green hover state
     
-    # Status
-    SUCCESS = "#10B981"
-    WARNING = "#F59E0B"
-    ERROR = "#EF4444"
-    INFO = "#3B82F6"
+    # TEXT COLORS - High contrast for readability
+    TEXT_PRIMARY = "#0F172A"        # Deep navy-black (highest contrast)
+    TEXT_SECONDARY = "#475569"      # Medium gray
+    TEXT_TERTIARY = "#94A3B8"       # Light gray
+    TEXT_LIGHT = "#E2E8F0"          # Very light gray
+    TEXT_INVERSE = "#FFFFFF"        # Inverse (white on dark)
     
-    # Borders
-    BORDER_LIGHT = "#E5E7EB"
-    BORDER_MEDIUM = "#D1D5DB"
+    # FINANCIAL TEXT - High visibility
+    TEXT_MONEY_POSITIVE = "#00A876" # Positive money (green)
+    TEXT_MONEY_NEGATIVE = "#DC2626" # Negative money (red)
+    TEXT_MONEY_NEUTRAL = "#0F172A"  # Neutral money (dark)
+    
+    # INTERACTIVE
+    ACCENT = "#00A876"              # Primary accent (green)
+    ACCENT_HOVER = "#00824D"        # Hover state (darker green)
+    ACCENT_FOCUS = "#005C3D"        # Focus state (even darker)
+    HOVER = "#D1FAE5"               # Hover background (light green)
+    FOCUS = "#A7F3D0"               # Focus background (medium light green)
+    DISABLED = "#D1D5DB"            # Disabled state
+    
+    # BORDERS
+    BORDER_LIGHT = "#E5E7EB"        # Light border
+    BORDER_MEDIUM = "#D1D5DB"       # Medium border
+    BORDER_DARK = "#9CA3AF"         # Dark border
+    
+    # SHADOWS & OVERLAYS
+    SHADOW_COLOR = "#000000"        # Shadow color
+    OVERLAY_LIGHT = "rgba(0, 168, 118, 0.05)"  # Light green overlay
+    OVERLAY_MEDIUM = "rgba(0, 168, 118, 0.1)"  # Medium green overlay
+    
+    # CHART COLORS - Green-based palette
+    CHART_1 = "#00A876"             # Primary green
+    CHART_2 = "#34C759"             # Light green
+    CHART_3 = "#10B981"             # Emerald
+    CHART_4 = "#06B078"             # Secondary green
+    CHART_5 = "#00824D"             # Dark green
+    CHART_6 = "#D1FAE5"             # Ultra light green
 
 
 class Shadows:
@@ -96,10 +148,10 @@ class Fonts:
     FAMILY_FALLBACK = "Segoe UI"
     
     @staticmethod
-    def get_font(size: int, weight: int = QFont.Bold, italic: bool = False) -> QFont:
-        """Get configured font"""
-        font = QFont(Fonts.FAMILY_PRIMARY, size)
-        font.setFamily(Fonts.FAMILY_FALLBACK)
+    def get_font(size: int, weight: int = QFont.Normal, italic: bool = False) -> QFont:
+        """Get configured font (uses loaded SF Pro when available)"""
+        family = FontManager.FONT_FAMILY or Fonts.FAMILY_PRIMARY or Fonts.FAMILY_FALLBACK
+        font = QFont(family, size)
         font.setWeight(weight)
         font.setItalic(italic)
         return font
@@ -219,11 +271,11 @@ QPushButton {{
 }}
 
 QPushButton:hover {{
-    background-color: {Colors.FOCUS};
+    background-color: {Colors.ACCENT_HOVER};
 }}
 
 QPushButton:pressed {{
-    background-color: #0284C7;
+    background-color: {Colors.ACCENT_FOCUS};
 }}
 
 QPushButton:disabled {{
@@ -301,6 +353,7 @@ QComboBox::down-arrow {{
 /* Labels */
 QLabel {{
     color: {Colors.TEXT_PRIMARY};
+    font-family: 'SF Pro', 'Segoe UI', sans-serif;
 }}
 
 /* Group Box */
@@ -309,6 +362,7 @@ QGroupBox {{
     border: none;
     padding: 0px;
     color: {Colors.TEXT_PRIMARY};
+    font-family: 'SF Pro', 'Segoe UI', sans-serif;
 }}
 
 /* Message Box */
@@ -322,6 +376,179 @@ QMessageBox QLabel {{
 
 QMessageBox QPushButton {{
     min-width: 60px;
+}}
+
+/* Table Widget */
+QTableWidget, QTableView {{
+    background-color: {Colors.BG_SECONDARY};
+    color: {Colors.TEXT_PRIMARY};
+    border: 1px solid {Colors.BORDER_LIGHT};
+    border-radius: {BorderRadius.MD}px;
+    gridline-color: {Colors.BORDER_LIGHT};
+}}
+
+QTableWidget::item {{
+    padding: 8px 12px;
+    border: none;
+}}
+
+QTableWidget::item:selected {{
+    background-color: {Colors.HOVER};
+    color: {Colors.TEXT_PRIMARY};
+}}
+
+QHeaderView::section {{
+    background-color: {Colors.BG_TERTIARY};
+    color: {Colors.TEXT_PRIMARY};
+    padding: 8px 12px;
+    border: none;
+    border-right: 1px solid {Colors.BORDER_LIGHT};
+    font-weight: 600;
+}}
+
+/* Spin Box */
+QSpinBox, QDoubleSpinBox {{
+    background-color: {Colors.BG_SECONDARY};
+    color: {Colors.TEXT_PRIMARY};
+    border: 1px solid {Colors.BORDER_LIGHT};
+    border-radius: {BorderRadius.MD}px;
+    padding: 8px 12px;
+    font-size: 13px;
+}}
+
+QSpinBox:focus, QDoubleSpinBox:focus {{
+    border: 1px solid {Colors.ACCENT};
+}}
+
+/* Check Box */
+QCheckBox {{
+    color: {Colors.TEXT_PRIMARY};
+    font-size: 13px;
+}}
+
+QCheckBox::indicator {{
+    width: 18px;
+    height: 18px;
+    border: 1px solid {Colors.BORDER_LIGHT};
+    border-radius: {BorderRadius.SM}px;
+    background-color: {Colors.BG_SECONDARY};
+}}
+
+QCheckBox::indicator:hover {{
+    border: 1px solid {Colors.ACCENT};
+    background-color: {Colors.HOVER};
+}}
+
+QCheckBox::indicator:checked {{
+    background-color: {Colors.ACCENT};
+    border: 1px solid {Colors.ACCENT};
+}}
+
+/* Radio Button */
+QRadioButton {{
+    color: {Colors.TEXT_PRIMARY};
+    font-size: 13px;
+}}
+
+QRadioButton::indicator {{
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    border: 1px solid {Colors.BORDER_LIGHT};
+    background-color: {Colors.BG_SECONDARY};
+}}
+
+QRadioButton::indicator:hover {{
+    border: 1px solid {Colors.ACCENT};
+    background-color: {Colors.HOVER};
+}}
+
+QRadioButton::indicator:checked {{
+    background-color: {Colors.ACCENT};
+    border: 1px solid {Colors.ACCENT};
+}}
+
+/* Dialog */
+QDialog {{
+    background-color: {Colors.BG_PRIMARY};
+}}
+
+/* File Dialog */
+QFileDialog {{
+    background-color: {Colors.BG_PRIMARY};
+}}
+
+/* Menu */
+QMenu {{
+    background-color: {Colors.BG_SECONDARY};
+    color: {Colors.TEXT_PRIMARY};
+    border: 1px solid {Colors.BORDER_LIGHT};
+    border-radius: {BorderRadius.MD}px;
+    padding: {Spacing.SM}px 0px;
+}}
+
+QMenu::item:selected {{
+    background-color: {Colors.HOVER};
+    color: {Colors.TEXT_PRIMARY};
+}}
+
+/* Tab Widget */
+QTabWidget::pane {{
+    border: 1px solid {Colors.BORDER_LIGHT};
+    background-color: {Colors.BG_SECONDARY};
+}}
+
+QTabBar::tab {{
+    background-color: {Colors.BG_TERTIARY};
+    color: {Colors.TEXT_PRIMARY};
+    padding: 8px 16px;
+    margin: 2px;
+    border: 1px solid {Colors.BORDER_LIGHT};
+    border-radius: {BorderRadius.MD}px;
+}}
+
+QTabBar::tab:selected {{
+    background-color: {Colors.ACCENT};
+    color: white;
+    border: 1px solid {Colors.ACCENT};
+}}
+
+QTabBar::tab:hover {{
+    background-color: {Colors.HOVER};
+}}
+
+/* Slider */
+QSlider::groove:horizontal {{
+    background-color: {Colors.BG_TERTIARY};
+    border-radius: 4px;
+    height: 6px;
+}}
+
+QSlider::handle:horizontal {{
+    background-color: {Colors.ACCENT};
+    border: 2px solid {Colors.ACCENT};
+    width: 18px;
+    margin: -6px 0;
+    border-radius: 9px;
+}}
+
+QSlider::handle:horizontal:hover {{
+    background-color: {Colors.ACCENT_HOVER};
+    border: 2px solid {Colors.ACCENT_HOVER};
+}}
+
+/* Progress Bar */
+QProgressBar {{
+    background-color: {Colors.BG_TERTIARY};
+    border: 1px solid {Colors.BORDER_LIGHT};
+    border-radius: {BorderRadius.MD}px;
+    text-align: center;
+    color: {Colors.TEXT_PRIMARY};
+}}
+
+QProgressBar::chunk {{
+    background-color: {Colors.ACCENT};
+    border-radius: {BorderRadius.SM}px;
 }}
 """
 

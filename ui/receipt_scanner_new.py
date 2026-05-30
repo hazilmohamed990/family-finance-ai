@@ -18,6 +18,7 @@ from pathlib import Path
 
 from database.enhanced_db import EnhancedDatabase
 from ui.theme import Colors, Fonts, Spacing, BorderRadius
+from .camera_dialog import CameraCaptureDialog
 
 
 class ReceiptPreviewCard(QFrame):
@@ -190,7 +191,7 @@ class ReceiptScanner(QWidget):
                 font-weight: bold;
             }}
             QPushButton:hover {{
-                background-color: #2563eb;
+                background-color: {Colors.ACCENT_HOVER};
             }}
         """)
         upload_btn.setCursor(Qt.PointingHandCursor)
@@ -213,7 +214,7 @@ class ReceiptScanner(QWidget):
             }}
         """)
         camera_btn.setCursor(Qt.PointingHandCursor)
-        # camera_btn.clicked.connect(self.take_camera_photo)  # Implement camera
+        camera_btn.clicked.connect(lambda: CameraCaptureDialog(self.process_receipt).exec_())  # Open live camera capture and process image
         
         button_layout.addWidget(upload_btn)
         button_layout.addWidget(camera_btn)

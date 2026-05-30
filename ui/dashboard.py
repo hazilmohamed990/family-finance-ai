@@ -79,7 +79,7 @@ class DashboardPage(QWidget):
         self.income_card.set_accent_color(Colors.INCOME)
         self.expense_card.set_accent_color(Colors.EXPENSE)
         self.savings_card.set_accent_color(Colors.SAVINGS)
-        self.rate_card.set_accent_color(Colors.NEUTRAL)
+        self.rate_card.set_accent_color(Colors.SUCCESS)
         
         stats_layout.addWidget(self.income_card, 0, 0)
         stats_layout.addWidget(self.expense_card, 0, 1)

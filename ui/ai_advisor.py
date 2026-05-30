@@ -184,10 +184,10 @@ class AIFinancialAdvisor(QWidget):
                 font-size: 13px;
             }}
             QPushButton:hover {{
-                background-color: #2563eb;
+                background-color: {Colors.ACCENT_HOVER};
             }}
             QPushButton:pressed {{
-                background-color: #1e40af;
+                background-color: {Colors.ACCENT_FOCUS};
             }}
         """)
         send_btn.setCursor(Qt.PointingHandCursor)

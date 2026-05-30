@@ -1,13 +1,13 @@
-"""
+﻿"""
 Family Finance AI - Premium Desktop Application
-Modern PyQt5 UI with fintech-grade styling
+Modern PyQt5 UI with fintech-grade styling and SF Pro font
 """
 
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget, QLabel, QTextEdit, QLineEdit, QPushButton, QCheckBox, QGroupBox, QGraphicsDropShadowEffect, QSpacerItem, QSizePolicy, QMessageBox, QFileDialog, QInputDialog, QSettings
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon, QFont, QColor
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget, QLabel, QTextEdit, QLineEdit, QCheckBox, QGroupBox, QGraphicsDropShadowEffect, QSpacerItem, QSizePolicy, QMessageBox, QFileDialog, QInputDialog
+from PyQt5.QtCore import Qt, QSize, QSettings
+from PyQt5.QtGui import QIcon, QFont, QColor, QFontDatabase
 import sqlite3
 import shutil
 import tempfile
@@ -16,7 +16,7 @@ import csv
 from datetime import datetime
 
 # Import new modern components
-from ui.theme import GLOBAL_STYLESHEET, Colors, Fonts
+from ui.theme import GLOBAL_STYLESHEET, Colors, Fonts, FontManager
 from ui.sidebar import ModernSidebar
 from ui.dashboard import DashboardPage
 from ui.transactions import ModernExpensesPage, ModernIncomePage
@@ -30,13 +30,21 @@ from core.data_service import DataService
 from database.queries import FinanceRepository
 
 
-# Old class definitions removed - using modern components instead
-
-
 class MainWindow(QMainWindow):
     def __init__(self, repo):
         super().__init__()
         self.repo = repo
+        
+        # Load SF Pro font globally
+        FontManager.load_font()
+        
+        # Apply global stylesheet
+        app = QApplication.instance()
+        app.setStyleSheet(GLOBAL_STYLESHEET)
+        
+        # Force SF Pro font globally
+        self._apply_global_font()
+        
         try:
             from ai.chatbot import FinanceChatbot
             self.chatbot = FinanceChatbot()
@@ -44,16 +52,56 @@ class MainWindow(QMainWindow):
             self.chatbot = None
         self.init_ui()
 
+    def _apply_global_font(self):
+        """Force SF Pro font globally"""
+        global_font = QFont("SF Pro", 11, QFont.Normal)
+        global_font.setStyleStrategy(QFont.PreferAntialias)
+        QApplication.instance().setFont(global_font)
+
     def init_ui(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(24, 24, 24, 24)
         header = QLabel('AI Assistant')
-        header.setStyleSheet('font-size:20px; font-weight:800;')
+        header.setStyleSheet(f'font-size:20px; font-weight:800; color: {Colors.TEXT_PRIMARY};')
         self.chat_area = QTextEdit()
         self.chat_area.setReadOnly(True)
+        self.chat_area.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {Colors.BG_SECONDARY};
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid {Colors.BORDER_LIGHT};
+                border-radius: 8px;
+                padding: 12px;
+            }}
+        """)
         self.input_line = QLineEdit()
         self.input_line.setPlaceholderText('Ask about budgeting, spending, or upload receipts for analysis')
+        self.input_line.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {Colors.BG_SECONDARY};
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid {Colors.BORDER_LIGHT};
+                border-radius: 8px;
+                padding: 10px 12px;
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {Colors.ACCENT};
+            }}
+        """)
         send_btn = QPushButton('Send')
+        send_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {Colors.ACCENT};
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 24px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background-color: {Colors.ACCENT_HOVER};
+            }}
+        """)
         send_btn.clicked.connect(self.send_message)
         input_layout = QHBoxLayout()
         input_layout.addWidget(self.input_line)
@@ -61,7 +109,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(header)
         layout.addWidget(self.chat_area)
         layout.addLayout(input_layout)
-        self.setLayout(layout)
+        
+        central_widget = QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+        
         self.load_ai_summary()
 
     def load_ai_summary(self):

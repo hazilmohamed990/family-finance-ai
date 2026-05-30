@@ -1,16 +1,18 @@
 """
 Reusable UI Components for fintech dashboard
 Cards, buttons, inputs, and other building blocks
+Premium Apple-inspired design with green + white theme
 """
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit,
-    QFrame, QGraphicsDropShadowEffect, QSpinBox, QDoubleSpinBox, QComboBox
+    QFrame, QGraphicsDropShadowEffect, QSpinBox, QDoubleSpinBox, QComboBox,
+    QProgressBar, QScrollArea, QTableWidget, QTableWidgetItem, QHeaderView
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QSize, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QFont, QColor, QIcon, QPixmap
+from PyQt5.QtCore import Qt, pyqtSignal, QSize, QPropertyAnimation, QEasingCurve, QRect, QTimer
+from PyQt5.QtGui import QFont, QColor, QIcon, QPixmap, QBrush, QPainter, QCursor
+from PyQt5.QtChart import QChart, QChartView, QPieSeries, QBarSeries, QBarSet, QBarCategoryAxis, QValueAxis, QPieSlice
 from .theme import Colors, Fonts, Spacing, BorderRadius, Shadows
-
 
 # ============================================================================
 # CARD COMPONENTS
@@ -45,7 +47,7 @@ class Card(QFrame):
 
 
 class StatCard(Card):
-    """Card for displaying a statistic"""
+    """Card for displaying a statistic with premium styling"""
     
     def __init__(self, title: str = "", value: str = "", subtitle: str = "", parent=None):
         super().__init__(parent)
@@ -56,10 +58,10 @@ class StatCard(Card):
         self.title_label.setFont(Fonts.caption())
         self.title_label.setStyleSheet(f"color: {Colors.TEXT_SECONDARY};")
         
-        # Value
+        # Value with proper color
         self.value_label = QLabel(value)
         self.value_label.setFont(Fonts.heading_4())
-        self.value_label.setStyleSheet(f"color: {Colors.TEXT_PRIMARY};")
+        self.value_label.setStyleSheet(f"color: {Colors.TEXT_MONEY_NEUTRAL}; font-weight: 700;")
         
         # Subtitle
         self.subtitle_label = QLabel(subtitle)
@@ -82,7 +84,445 @@ class StatCard(Card):
     
     def set_accent_color(self, color: str):
         """Set accent color for the value"""
-        self.value_label.setStyleSheet(f"color: {color};")
+        self.value_label.setStyleSheet(f"color: {color}; font-weight: 700;")
+
+
+class MetricCard(Card):
+    """Card with metric display and optional icon"""
+    
+    def __init__(self, title: str, value: str, icon_path: str = None, color: str = Colors.ACCENT, parent=None):
+        super().__init__(parent)
+        self.layout.setSpacing(Spacing.MD)
+        
+        top_layout = QHBoxLayout()
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Icon
+        if icon_path:
+            icon_label = QLabel()
+            pixmap = QPixmap(icon_path)
+            if not pixmap.isNull():
+                icon_label.setPixmap(pixmap.scaledToWidth(32, Qt.SmoothTransformation))
+            top_layout.addWidget(icon_label)
+        
+        # Title and value
+        info_layout = QVBoxLayout()
+        info_layout.setContentsMargins(0, 0, 0, 0)
+        info_layout.setSpacing(Spacing.XS)
+        
+        title_label = QLabel(title)
+        title_label.setFont(Fonts.caption())
+        title_label.setStyleSheet(f"color: {Colors.TEXT_SECONDARY};")
+        
+        value_label = QLabel(value)
+        value_label.setFont(Fonts.heading_5())
+        value_label.setStyleSheet(f"color: {color}; font-weight: 700;")
+        
+        info_layout.addWidget(title_label)
+        info_layout.addWidget(value_label)
+        
+        top_layout.addLayout(info_layout)
+        top_layout.addStretch()
+        
+        self.layout.addLayout(top_layout)
+        self.layout.addStretch()
+
+
+# ============================================================================
+# BUTTON COMPONENTS
+# ============================================================================
+
+class PrimaryButton(QPushButton):
+    """Premium primary button with hover effects"""
+    
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(text, parent)
+        self.setMinimumHeight(44)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setFont(Fonts.body_base())
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {Colors.ACCENT};
+                color: white;
+                border: none;
+                border-radius: {BorderRadius.MD}px;
+                padding: 10px 24px;
+                font-weight: 600;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {Colors.ACCENT_HOVER};
+            }}
+            QPushButton:pressed {{
+                background-color: {Colors.ACCENT_FOCUS};
+            }}
+            QPushButton:disabled {{
+                background-color: {Colors.DISABLED};
+                color: {Colors.TEXT_TERTIARY};
+            }}
+        """)
+
+
+class SecondaryButton(QPushButton):
+    """Secondary button with outline style"""
+    
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(text, parent)
+        self.setMinimumHeight(44)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setFont(Fonts.body_base())
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {Colors.BG_TERTIARY};
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid {Colors.BORDER_LIGHT};
+                border-radius: {BorderRadius.MD}px;
+                padding: 10px 24px;
+                font-weight: 500;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {Colors.HOVER};
+                border: 1px solid {Colors.ACCENT};
+            }}
+            QPushButton:pressed {{
+                background-color: {Colors.FOCUS};
+                border: 1px solid {Colors.ACCENT};
+            }}
+        """)
+
+
+class GhostButton(QPushButton):
+    """Ghost button with minimal style"""
+    
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(text, parent)
+        self.setMinimumHeight(40)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setFont(Fonts.body_base())
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent;
+                color: {Colors.TEXT_PRIMARY};
+                border: none;
+                padding: 8px 16px;
+                font-weight: 500;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                color: {Colors.ACCENT};
+            }}
+            QPushButton:pressed {{
+                color: {Colors.ACCENT_FOCUS};
+            }}
+        """)
+
+
+# ============================================================================
+# INPUT COMPONENTS
+# ============================================================================
+
+class PremiumLineEdit(QLineEdit):
+    """Premium text input with enhanced styling"""
+    
+    def __init__(self, placeholder: str = "", parent=None):
+        super().__init__(parent)
+        self.setPlaceholderText(placeholder)
+        self.setMinimumHeight(44)
+        self.setFont(Fonts.body_base())
+        self.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {Colors.BG_SECONDARY};
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid {Colors.BORDER_LIGHT};
+                border-radius: {BorderRadius.MD}px;
+                padding: 10px 12px;
+                font-size: 14px;
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {Colors.ACCENT};
+                background-color: {Colors.BG_SECONDARY};
+            }}
+            QLineEdit::placeholder {{
+                color: {Colors.TEXT_TERTIARY};
+            }}
+        """)
+
+
+class PremiumSpinBox(QDoubleSpinBox):
+    """Premium numeric input"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimumHeight(44)
+        self.setFont(Fonts.body_base())
+        self.setDecimals(2)
+        self.setStyleSheet(f"""
+            QDoubleSpinBox {{
+                background-color: {Colors.BG_SECONDARY};
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid {Colors.BORDER_LIGHT};
+                border-radius: {BorderRadius.MD}px;
+                padding: 8px 12px;
+                font-size: 14px;
+            }}
+            QDoubleSpinBox:focus {{
+                border: 2px solid {Colors.ACCENT};
+            }}
+        """)
+
+
+# ============================================================================
+# LAYOUT COMPONENTS
+# ============================================================================
+
+class Section(QFrame):
+    """Section container with optional title"""
+    
+    def __init__(self, title: str = "", parent=None):
+        super().__init__(parent)
+        self.setStyleSheet(f"""
+            Section {{
+                background-color: transparent;
+                border: none;
+            }}
+        """)
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(Spacing.MD)
+        
+        if title:
+            title_label = QLabel(title)
+            title_label.setFont(Fonts.heading_5())
+            title_label.setStyleSheet(f"color: {Colors.TEXT_PRIMARY};")
+            layout.addWidget(title_label)
+        
+        self.content_layout = QVBoxLayout()
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setSpacing(Spacing.MD)
+        layout.addLayout(self.content_layout)
+        
+        self.setLayout(layout)
+    
+    def add_widget(self, widget):
+        """Add widget to section"""
+        self.content_layout.addWidget(widget)
+    
+    def add_layout(self, layout):
+        """Add layout to section"""
+        self.content_layout.addLayout(layout)
+
+
+class HSection(QFrame):
+    """Horizontal section for side-by-side layouts"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet(f"""
+            HSection {{
+                background-color: transparent;
+                border: none;
+            }}
+        """)
+        
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(Spacing.LG)
+        self.setLayout(self.layout)
+    
+    def add_widget(self, widget):
+        """Add widget"""
+        self.layout.addWidget(widget)
+    
+    def add_layout(self, layout):
+        """Add layout"""
+        self.layout.addLayout(layout)
+
+
+class VSection(QFrame):
+    """Vertical section"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet(f"""
+            VSection {{
+                background-color: transparent;
+                border: none;
+            }}
+        """)
+        
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(Spacing.MD)
+        self.setLayout(self.layout)
+    
+    def add_widget(self, widget):
+        """Add widget"""
+        self.layout.addWidget(widget)
+    
+    def add_layout(self, layout):
+        """Add layout"""
+        self.layout.addLayout(layout)
+
+
+# ============================================================================
+# PROGRESS COMPONENTS
+# ============================================================================
+
+class ProgressRing(QFrame):
+    """Circular progress indicator"""
+    
+    def __init__(self, size: int = 100, value: float = 0.5, color: str = Colors.ACCENT, parent=None):
+        super().__init__(parent)
+        self.size = size
+        self.value = value
+        self.color = color
+        self.setFixedSize(size, size)
+        self.setStyleSheet("background-color: transparent; border: none;")
+    
+    def setValue(self, value: float):
+        """Set progress value (0-1)"""
+        self.value = max(0, min(1, value))
+        self.update()
+    
+    def paintEvent(self, event):
+        """Paint circular progress"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        center = self.size / 2
+        radius = self.size / 2 - 5
+        
+        # Background circle
+        painter.setPen(QColor(Colors.BORDER_LIGHT))
+        painter.drawEllipse(center - radius, center - radius, radius * 2, radius * 2)
+        
+        # Progress arc
+        painter.setPen(QColor(self.color))
+        painter.drawArc(
+            int(center - radius), int(center - radius),
+            int(radius * 2), int(radius * 2),
+            90 * 16, int(-self.value * 360 * 16)
+        )
+
+
+# ============================================================================
+# TABLE COMPONENTS
+# ============================================================================
+
+class DataTable(QTableWidget):
+    """Premium data table"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet(f"""
+            QTableWidget {{
+                background-color: {Colors.BG_SECONDARY};
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid {Colors.BORDER_LIGHT};
+                border-radius: {BorderRadius.MD}px;
+                gridline-color: {Colors.BORDER_LIGHT};
+            }}
+            QTableWidget::item {{
+                padding: 8px 12px;
+                border: none;
+            }}
+            QTableWidget::item:selected {{
+                background-color: {Colors.HOVER};
+                color: {Colors.TEXT_PRIMARY};
+            }}
+            QHeaderView::section {{
+                background-color: {Colors.BG_TERTIARY};
+                color: {Colors.TEXT_PRIMARY};
+                padding: 8px 12px;
+                border: none;
+                border-right: 1px solid {Colors.BORDER_LIGHT};
+                font-weight: 600;
+            }}
+        """)
+        
+        # Style header
+        header = self.horizontalHeader()
+        header.setStretchLastSection(True)
+        self.verticalHeader().setVisible(False)
+        
+        # Font
+        self.setFont(Fonts.body_base())
+
+
+# ============================================================================
+# SEPARATOR COMPONENT
+# ============================================================================
+
+class Separator(QFrame):
+    """Visual separator line"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Plain)
+        self.setLineWidth(1)
+        self.setStyleSheet(f"color: {Colors.BORDER_LIGHT};")
+        self.setFixedHeight(1)
+
+
+class VerticalSeparator(QFrame):
+    """Vertical separator line"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.VLine)
+        self.setFrameShadow(QFrame.Plain)
+        self.setLineWidth(1)
+        self.setStyleSheet(f"color: {Colors.BORDER_LIGHT};")
+        self.setFixedWidth(1)
+
+
+# ============================================================================
+# SIDEBAR COMPONENTS
+# ============================================================================
+
+class SidebarItem(QPushButton):
+    """Sidebar navigation item"""
+    
+    def __init__(self, name: str, icon_path: str = None, parent=None):
+        super().__init__(parent)
+        self.setText(name)
+        self.setMinimumHeight(44)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setFont(Fonts.body_base())
+        
+        # Icon
+        if icon_path and os.path.exists(icon_path):
+            icon = QIcon(icon_path)
+            self.setIcon(icon)
+            self.setIconSize(QSize(20, 20))
+        
+        self.setStyleSheet(f"""
+            SidebarItem {{
+                background-color: transparent;
+                color: {Colors.TEXT_PRIMARY};
+                border: 1px solid transparent;
+                border-radius: {BorderRadius.MD}px;
+                padding: 8px 12px;
+                text-align: left;
+                font-weight: 500;
+            }}
+            SidebarItem:hover {{
+                background-color: {Colors.HOVER};
+                border: 1px solid {Colors.BORDER_LIGHT};
+            }}
+            SidebarItem:pressed {{
+                background-color: {Colors.ACCENT};
+                color: white;
+                border: 1px solid {Colors.ACCENT};
+            }}
+        """)
+
+
+import os
+
 
 
 class MetricCard(Card):
@@ -162,10 +602,10 @@ class PrimaryButton(QPushButton):
                 font-size: 13px;
             }}
             QPushButton:hover {{
-                background-color: {Colors.FOCUS};
+                background-color: {Colors.ACCENT_HOVER};
             }}
             QPushButton:pressed {{
-                background-color: #0284C7;
+                background-color: {Colors.ACCENT_FOCUS};
             }}
             QPushButton:disabled {{
                 background-color: {Colors.DISABLED};
@@ -194,7 +634,7 @@ class SecondaryButton(QPushButton):
                 background-color: {Colors.HOVER};
             }}
             QPushButton:pressed {{
-                background-color: #E0E7FF;
+                background-color: {Colors.HOVER};
             }}
             QPushButton:disabled {{
                 background-color: {Colors.BG_TERTIARY};

@@ -168,10 +168,10 @@ class LoginPage(QWidget):
                 font-weight: bold;
             }}
             QPushButton:hover {{
-                background-color: #2563eb;
+                background-color: {Colors.ACCENT_HOVER};
             }}
             QPushButton:pressed {{
-                background-color: #1e40af;
+                background-color: {Colors.ACCENT_FOCUS};
             }}
         """)
         login_btn.setCursor(Qt.PointingHandCursor)

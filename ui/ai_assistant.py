@@ -11,7 +11,7 @@ from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import pyqtSignal
 
 from .theme import Colors, Fonts, Spacing, BorderRadius
-from .components import Card, PrimaryButton, StyledLineEdit, VSection
+from .components import Card, PrimaryButton, PremiumLineEdit, VSection
 
 
 class MessageBubble(QFrame):
@@ -138,7 +138,7 @@ class ModernAIAssistantPage(QWidget):
         input_layout.setContentsMargins(0, 0, 0, 0)
         input_layout.setSpacing(Spacing.MD)
         
-        self.input_field = StyledLineEdit("Ask about budgeting, spending, or get AI insights...")
+        self.input_field = PremiumLineEdit("Ask about budgeting, spending, or get AI insights...")
         self.input_field.returnPressed.connect(self.send_message)
         
         send_btn = PrimaryButton("Send")

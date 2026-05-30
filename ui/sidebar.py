@@ -1,14 +1,15 @@
 """
 Modern sidebar navigation component
+Premium Apple-inspired with green + white theme
 """
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea, QFrame
 )
 from PyQt5.QtCore import Qt, QSize, pyqtSignal
-from PyQt5.QtGui import QPixmap, QIcon, QFont
+from PyQt5.QtGui import QPixmap, QIcon, QFont, QCursor
 from .theme import Colors, Fonts, Spacing, BorderRadius
-from .components import SidebarItem, Separator
+from .components import SidebarItem, Separator, PrimaryButton, GhostButton
 
 
 class ModernSidebar(QWidget):
@@ -25,27 +26,49 @@ class ModernSidebar(QWidget):
     def init_ui(self):
         """Initialize sidebar UI"""
         layout = QVBoxLayout()
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(16, 24, 16, 24)
+        layout.setSpacing(12)
         
-        # Logo
-        logo_container = QWidget()
-        logo_layout = QHBoxLayout()
+        # Logo container with enhanced styling
+        logo_container = QFrame()
+        logo_container.setStyleSheet("background-color: transparent; border: none;")
+        logo_layout = QVBoxLayout()
         logo_layout.setContentsMargins(0, 0, 0, 0)
+        logo_layout.setSpacing(8)
         
+        # Logo image - increased size
         logo_label = QLabel()
-        logo_pixmap = QPixmap("assets/images/logo.png")
-        if not logo_pixmap.isNull():
-            logo_pixmap = logo_pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            logo_label.setPixmap(logo_pixmap)
-            logo_label.setAlignment(Qt.AlignCenter)
+        logo_path = "assets/images/logo.png"
+        try:
+            import os
+            if os.path.exists(logo_path):
+                logo_pixmap = QPixmap(logo_path)
+                if not logo_pixmap.isNull():
+                    # Significantly larger logo
+                    logo_pixmap = logo_pixmap.scaledToWidth(
+                        100, Qt.SmoothTransformation
+                    )
+                    logo_label.setPixmap(logo_pixmap)
+                    logo_label.setAlignment(Qt.AlignCenter)
+        except:
+            pass
+        
+        # App name
+        app_name = QLabel("Family Finance")
+        app_name.setFont(Fonts.heading_4())
+        app_name.setStyleSheet(f"""
+            color: {Colors.ACCENT};
+            font-weight: 700;
+            padding-top: 8px;
+        """)
+        app_name.setAlignment(Qt.AlignCenter)
         
         logo_layout.addWidget(logo_label)
+        logo_layout.addWidget(app_name)
         logo_container.setLayout(logo_layout)
-        logo_container.setFixedHeight(44)
         layout.addWidget(logo_container)
         
-        layout.addSpacing(Spacing.MD)
+        layout.addSpacing(Spacing.LG)
         
         # Navigation items
         nav_pages = [
@@ -74,29 +97,22 @@ class ModernSidebar(QWidget):
         
         layout.addStretch()
         
-        # Help
-        help_label = QLabel("Help & Support")
+        # Help text at bottom
+        help_label = QLabel("Need Help?")
         help_label.setFont(Fonts.caption())
-        help_label.setStyleSheet(f"color: {Colors.TEXT_TERTIARY}; padding: 8px 12px;")
+        help_label.setStyleSheet(f"color: {Colors.TEXT_TERTIARY}; padding: 8px 0px;")
+        help_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(help_label)
         
-        help_btn = QPushButton("Documentation")
-        help_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                color: {Colors.TEXT_SECONDARY};
-                border: 1px solid {Colors.BORDER_LIGHT};
-                border-radius: {BorderRadius.SM}px;
-                padding: 8px 12px;
-                font-size: 12px;
-            }}
-            QPushButton:hover {{
-                background-color: {Colors.HOVER};
-                color: {Colors.TEXT_PRIMARY};
-            }}
+        help_text = QLabel("View documentation or contact support")
+        help_text.setFont(Fonts.body_xs())
+        help_text.setStyleSheet(f"""
+            color: {Colors.TEXT_TERTIARY};
+            text-align: center;
         """)
-        help_btn.setCursor(Qt.PointingHandCursor)
-        layout.addWidget(help_btn)
+        help_text.setWordWrap(True)
+        help_text.setAlignment(Qt.AlignCenter)
+        layout.addWidget(help_text)
         
         self.setLayout(layout)
         self.setStyleSheet(f"""
@@ -105,22 +121,15 @@ class ModernSidebar(QWidget):
                 border-right: 1px solid {Colors.BORDER_LIGHT};
             }}
         """)
-        
-        # Set initial active state
-        self._update_active_item()
     
-    def _on_item_clicked(self, page_idx: int):
+    def _on_item_clicked(self, page_idx):
         """Handle item click"""
         self.current_page = page_idx
-        self._update_active_item()
         self.page_switched.emit(page_idx)
-    
-    def _update_active_item(self):
-        """Update active item styling"""
-        for i, item in enumerate(self.items):
-            item.set_active(i == self.current_page)
-    
-    def set_current_page(self, page_idx: int):
-        """Set current page"""
-        self.current_page = page_idx
-        self._update_active_item()
+        
+        # Update visual state
+        for item in self.items:
+            item.setProperty("active", False)
+        
+        if page_idx < len(self.items):
+            self.items[page_idx].setProperty("active", True)

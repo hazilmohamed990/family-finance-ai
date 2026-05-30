@@ -121,7 +121,7 @@ class SettingsPanel(QWidget):
                 font-weight: bold;
             }}
             QPushButton:hover {{
-                background-color: #2563eb;
+                background-color: {Colors.ACCENT_HOVER};
             }}
         """)
         save_btn.setCursor(Qt.PointingHandCursor)
