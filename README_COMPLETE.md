@@ -97,11 +97,18 @@ pip install -r requirements.txt
 
 ### 4. Install Optional Dependencies
 
-For OCR support (receipt scanning):
+For OCR support (receipt scanning), install both the Python wrapper and the Tesseract engine:
+
+```bash
+pip install pytesseract
+```
+
+Then install the Tesseract engine:
+
 ```bash
 # Windows
-# Download pytesseract from: https://github.com/UB-Mannheim/tesseract/wiki
-# Add Tesseract to PATH or set in code
+# Download and install from https://github.com/UB-Mannheim/tesseract/wiki
+# Add Tesseract to PATH or set TESSERACT_CMD / TESSERACT_PATH
 
 # macOS
 brew install tesseract
@@ -109,6 +116,23 @@ brew install tesseract
 # Linux
 sudo apt-get install tesseract-ocr
 ```
+
+If Tesseract is not on PATH, set one of these environment variables in your `.env` file:
+
+```env
+TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+# or
+TESSERACT_PATH=C:\Program Files\Tesseract-OCR
+```
+
+The app also supports these variables:
+
+```env
+TESSERACT=SOME_PATH
+TESSERACT_EXE=SOME_PATH
+```
+
+The scanner will auto-detect common paths on Windows, macOS, and Linux.
 
 ## Configuration
 
@@ -331,6 +355,22 @@ python --version  # Should be 3.8+
 pip list          # Verify PyQt5 is installed
 ```
 
+### Issue: OCR not working
+
+**Solution**: Install the Tesseract engine and make sure it is accessible.
+
+- Verify the executable is available in PATH by running `tesseract --version`.
+- Or configure one of these environment variables in your `.env` file:
+  - `TESSERACT_CMD`
+  - `TESSERACT_PATH`
+  - `TESSERACT`
+  - `TESSERACT_EXE`
+- Common Windows install locations:
+  - `C:\Program Files\Tesseract-OCR\tesseract.exe`
+  - `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`
+
+The app logs the exact Tesseract path it uses when OCR is initialized.
+
 ### Issue: Database errors
 
 **Solution**: Delete `finance.db` and restart (creates fresh database)
@@ -345,7 +385,19 @@ python main_production.py
 
 ### Issue: OCR not working
 
-**Solution**: Install tesseract-ocr and set path in environment
+**Solution**: Install the Tesseract engine and make sure it is accessible.
+
+- Verify the executable is available in PATH by running `tesseract --version`.
+- Or configure one of these environment variables:
+  - `TESSERACT_CMD`
+  - `TESSERACT_PATH`
+  - `TESSERACT`
+  - `TESSERACT_EXE`
+- Common Windows install locations:
+  - `C:\Program Files\Tesseract-OCR\tesseract.exe`
+  - `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`
+
+The app logs the exact Tesseract path it uses when OCR is initialized.
 
 ## Contributing
 

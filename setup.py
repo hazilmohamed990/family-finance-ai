@@ -139,8 +139,9 @@ ENABLE_OCR=false
 ENABLE_CAMERA=false
 
 # Tesseract OCR (if using OCR)
-# TESSERACT_PATH=/usr/share/tesseract-ocr/tessdata (Linux)
-# TESSERACT_PATH=C:\\Program Files\\Tesseract-OCR (Windows)
+# TESSERACT_CMD=/usr/local/bin/tesseract  # path to executable on macOS/Linux
+# TESSERACT_CMD=C:\\Program Files\\Tesseract-OCR\\tesseract.exe  # path to executable on Windows
+# TESSERACT_PATH=C:\\Program Files\\Tesseract-OCR  # optional directory containing tesseract.exe
 """
     
     with open(env_file, 'w') as f:

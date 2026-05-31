@@ -2,6 +2,13 @@ import logging
 import os
 import re
 import json
+import shutil
+from pathlib import Path
+try:
+    from dotenv import load_dotenv
+except Exception:
+    load_dotenv = None
+
 try:
     import cv2
 except Exception:
@@ -21,11 +28,105 @@ if not logger.handlers:
     logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+if load_dotenv is not None:
+    env_path = Path(__file__).resolve().parents[1] / '.env'
+    if env_path.exists():
+        logger.debug(f"Loading .env from {env_path}")
+        load_dotenv(dotenv_path=env_path, override=False)
+    else:
+        logger.debug("No .env file found at project root; skipping dotenv load.")
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("[ReceiptScanner] %(levelname)s: %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+
+TESSERACT_ENV_VARS = [
+    "TESSERACT_CMD",
+    "TESSERACT_PATH",
+    "TESSERACT",
+    "TESSERACT_EXE",
+]
+
+COMMON_TESSERACT_PATHS = [
+    # Windows common installers
+    r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+    r"C:\\Program Files (x86)\\Tesseract-OCR\\tesseract.exe",
+    # macOS Brew / default
+    "/opt/homebrew/bin/tesseract",
+    "/usr/local/bin/tesseract",
+    "/usr/bin/tesseract",
+    # Linux defaults
+    "/usr/bin/tesseract",
+    "/usr/local/bin/tesseract",
+]
+
+
+def _is_executable(path: str) -> bool:
+    return bool(path and os.path.isfile(path) and os.access(path, os.X_OK))
+
+
+def _resolve_tesseract_candidate(candidate: str):
+    if not candidate:
+        return None
+    candidate = candidate.strip().strip('"')
+
+    if os.path.isdir(candidate):
+        for name in ["tesseract.exe", "tesseract"]:
+            candidate_path = os.path.join(candidate, name)
+            if _is_executable(candidate_path):
+                return candidate_path
+        return None
+
+    if _is_executable(candidate):
+        return candidate
+
+    return shutil.which(candidate)
+
+
+def _find_tesseract_cmd(override_cmd=None) -> str:
+    candidates = []
+    if override_cmd:
+        candidates.append(override_cmd)
+    for env_var in TESSERACT_ENV_VARS:
+        value = os.environ.get(env_var)
+        if value:
+            logger.debug(f"Found environment variable {env_var}={value}")
+            candidates.append(value)
+
+    path_candidate = shutil.which("tesseract")
+    if path_candidate:
+        logger.debug(f"Found tesseract on PATH: {path_candidate}")
+        candidates.append(path_candidate)
+
+    candidates.extend(COMMON_TESSERACT_PATHS)
+
+    for candidate in candidates:
+        resolved = _resolve_tesseract_candidate(candidate)
+        if resolved:
+            logger.debug(f"Resolved Tesseract candidate {candidate} -> {resolved}")
+            return resolved
+        logger.debug(f"Tesseract candidate not valid: {candidate}")
+
+    logger.debug("No valid Tesseract executable found among candidates.")
+    return None
+
 
 class ReceiptScanner:
     def __init__(self, tesseract_cmd=None):
-        if pytesseract and tesseract_cmd:
-            pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+        self.tesseract_cmd = _find_tesseract_cmd(tesseract_cmd)
+        if pytesseract:
+            if self.tesseract_cmd:
+                pytesseract.pytesseract.tesseract_cmd = self.tesseract_cmd
+                logger.info(f"Tesseract found and configured at: {self.tesseract_cmd}")
+            else:
+                logger.warning(
+                    "Tesseract executable not found. "
+                    "Set TESSERACT_CMD or TESSERACT_PATH, or install Tesseract on your system."
+                )
+        else:
+            logger.warning("pytesseract module is not installed. OCR is unavailable.")
 
     def _load(self, path):
         if cv2:
@@ -107,20 +208,40 @@ class ReceiptScanner:
             return warped
         return orig
 
-    def _ocr(self, img):
+    def _ensure_tesseract_available(self):
         if pytesseract is None:
-            return "", 0.0, None
-        if cv2 is not None:
-            rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            pil_img = Image.fromarray(rgb)
-        else:
-            pil_img = Image.fromarray(img)
-        data = pytesseract.image_to_data(
-            pil_img,
-            output_type=pytesseract.Output.DICT,
-            lang='eng',
-            config='--psm 6',
-        )
+            raise RuntimeError(
+                "pytesseract is not installed. Install it with `pip install pytesseract`."
+            )
+        if not self.tesseract_cmd:
+            raise RuntimeError(
+                "Tesseract executable not found. Install Tesseract or set TESSERACT_CMD/TESSERACT_PATH. "
+                "Common Windows paths: C:\\Program Files\\Tesseract-OCR\\tesseract.exe or C:\\Program Files (x86)\\Tesseract-OCR\\tesseract.exe."
+            )
+
+    def _ocr(self, img):
+        self._ensure_tesseract_available()
+        try:
+            if cv2 is not None:
+                rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                pil_img = Image.fromarray(rgb)
+            else:
+                pil_img = Image.fromarray(img)
+            data = pytesseract.image_to_data(
+                pil_img,
+                output_type=pytesseract.Output.DICT,
+                lang='eng',
+                config='--psm 6',
+            )
+        except Exception as exc:
+            if hasattr(pytesseract, 'TesseractNotFoundError') and isinstance(exc, pytesseract.TesseractNotFoundError):
+                raise RuntimeError(
+                    "Tesseract executable was not found. "
+                    "Please install Tesseract or set TESSERACT_CMD/TESSERACT_PATH."
+                ) from exc
+            logger.exception("OCR processing failed")
+            raise RuntimeError(f"OCR processing failed: {exc}") from exc
+
         lines = []
         confidences = []
         for text, conf in zip(data.get('text', []), data.get('conf', [])):
