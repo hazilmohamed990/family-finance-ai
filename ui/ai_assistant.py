@@ -131,6 +131,7 @@ class ModernAIAssistantPage(QWidget):
         self.chat_widget.setLayout(self.chat_layout)
         
         scroll.setWidget(self.chat_widget)
+        self.chat_scroll = scroll
         chat_container.layout.addWidget(scroll, 1)
         
         # Input area
@@ -176,9 +177,11 @@ class ModernAIAssistantPage(QWidget):
                 self.chat_layout.addWidget(insight_bubble)
             
             self.chat_layout.addStretch()
+            self._scroll_to_bottom()
         except Exception as e:
             error_bubble = MessageBubble(f"Unable to load summary: {e}", is_user=False)
             self.chat_layout.addWidget(error_bubble)
+            self._scroll_to_bottom()
     
     def send_message(self):
         """Send message to AI assistant"""
@@ -190,11 +193,7 @@ class ModernAIAssistantPage(QWidget):
         user_bubble = MessageBubble(message, is_user=True)
         self.chat_layout.insertWidget(self.chat_layout.count() - 1, user_bubble)
         self.input_field.clear()
-        
-        # Scroll to latest
-        scroll = self.chat_layout.parent().parent()
-        if scroll:
-            scroll.verticalScrollBar().setValue(scroll.verticalScrollBar().maximum())
+        self._scroll_to_bottom()
         
         if not self.chatbot:
             error_bubble = MessageBubble("AI assistant unavailable (AI not configured).", is_user=False)
@@ -210,7 +209,14 @@ class ModernAIAssistantPage(QWidget):
         except Exception as e:
             error_bubble = MessageBubble(f"Error: {str(e)}", is_user=False)
             self.chat_layout.insertWidget(self.chat_layout.count() - 1, error_bubble)
+        finally:
+            self._scroll_to_bottom()
     
+    def _scroll_to_bottom(self):
+        if getattr(self, 'chat_scroll', None) is not None:
+            scrollbar = self.chat_scroll.verticalScrollBar()
+            scrollbar.setValue(scrollbar.maximum())
+
     def load_ai_summary(self):
         """Refresh summary (callback for other pages)"""
         self.load_summary()

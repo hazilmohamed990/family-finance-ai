@@ -10,6 +10,38 @@ class DataService:
     def __init__(self, repo: FinanceRepository = None, user_id: int = 1):
         self.repo = repo or FinanceRepository()
         self.user_id = user_id
+        self._seed_demo_data_if_empty()
+
+    def _seed_demo_data_if_empty(self):
+        if self.repo.get_income_total(self.user_id) > 0 or self.repo.get_expenses(self.user_id):
+            return
+
+        demo_income = [
+            (4200.00, "Salary", "2024-02-15"),
+            (1250.00, "Freelance", "2024-03-05"),
+            (4200.00, "Salary", "2024-04-15"),
+        ]
+        demo_expenses = [
+            ("Groceries", 312.25, "2024-02-02", "Weekly grocery run"),
+            ("Utilities", 118.50, "2024-02-10", "Electric and water"),
+            ("Transport", 64.80, "2024-02-11", "Monthly transit pass"),
+            ("Dining", 89.20, "2024-02-18", "Family dinner out"),
+            ("Entertainment", 45.00, "2024-02-23", "Movie night"),
+            ("Groceries", 298.60, "2024-03-01", "Supermarket refill"),
+            ("Healthcare", 52.00, "2024-03-08", "Pharmacy visit"),
+            ("Savings", 100.00, "2024-03-12", "Emergency fund"),
+            ("Utilities", 124.30, "2024-03-13", "Internet and gas"),
+            ("Travel", 225.00, "2024-03-20", "Weekend trip"),
+            ("Groceries", 324.10, "2024-04-02", "Grocery pickup"),
+            ("Dining", 74.15, "2024-04-09", "Lunch with family"),
+            ("Subscriptions", 33.99, "2024-04-11", "Streaming services"),
+            ("Transport", 70.00, "2024-04-15", "Fuel and rideshare"),
+        ]
+
+        for amount, source, date in demo_income:
+            self.repo.add_income(self.user_id, amount, source, date)
+        for category, amount, date, description in demo_expenses:
+            self.repo.add_expense(self.user_id, category, amount, date, description)
 
     def get_expenses(self, start_date: str = None, end_date: str = None, category: str = None) -> List[Expense]:
         rows = self.repo.get_expenses(self.user_id, start_date, end_date, category)
@@ -78,14 +110,26 @@ class DataService:
         for expense in self.get_expenses():
             totals[expense.category] += expense.amount
 
-        categories = list(totals.keys())
+        categories = sorted(totals.keys(), key=lambda cat: totals[cat], reverse=True)
         amounts = [totals[cat] for cat in categories]
         return categories, amounts
 
     def savings_growth(self) -> Tuple[List[str], List[float]]:
-        months = sorted({expense.month_key() for expense in self.get_expenses()})
+        months = set()
+        for date_text, amount in self.repo.get_income_history(self.user_id):
+            try:
+                month = datetime.strptime(date_text, "%Y-%m-%d").strftime("%Y-%m")
+            except ValueError:
+                month = date_text
+            months.add(month)
+
+        for expense in self.get_expenses():
+            months.add(expense.month_key())
+
+        months = sorted(months)
         balance_history = []
         cumulative = 0.0
+
         for month in months:
             income = 0.0
             for date_text, amount in self.repo.get_income_history(self.user_id):

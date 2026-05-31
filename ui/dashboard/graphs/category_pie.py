@@ -9,7 +9,7 @@ class CategoryPieChart(QWidget):
     def __init__(self, data_service):
         super().__init__()
         self.data_service = data_service
-        self.figure = Figure(figsize=(5, 3), facecolor="none")
+        self.figure = Figure(figsize=(5, 3), facecolor="none", dpi=120)
         self.canvas = FigureCanvas(self.figure)
         self.ax = self.figure.add_subplot(111)
         self._build_ui()
@@ -34,7 +34,8 @@ class CategoryPieChart(QWidget):
         self.ax.clear()
         categories, amounts = self.data_service.category_distribution()
         if categories and any(amounts):
-            self.ax.pie(amounts, labels=categories, autopct="%1.1f%%", textprops={"color": "white"}, colors=["#00C25A", "#82C462", "#B4DE8B", "#3B7235"])
+            palette = ["#00C25A", "#82C462", "#B4DE8B", "#3B7235", "#5C9D4E", "#7EBF73", "#A9D99A"]
+            self.ax.pie(amounts, labels=categories, autopct="%1.1f%%", textprops={"color": "white"}, colors=palette[:len(categories)])
             self.ax.axis("equal")
         else:
             self.ax.text(0.5, 0.5, "No category data yet", ha="center", va="center", color="#E4F1D1", fontsize=12)

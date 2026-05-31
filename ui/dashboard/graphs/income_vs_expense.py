@@ -9,7 +9,7 @@ class IncomeVsExpenseChart(QWidget):
     def __init__(self, data_service):
         super().__init__()
         self.data_service = data_service
-        self.figure = Figure(figsize=(5, 3), facecolor="none")
+        self.figure = Figure(figsize=(5, 3), facecolor="none", dpi=120)
         self.canvas = FigureCanvas(self.figure)
         self.ax = self.figure.add_subplot(111)
         self._build_ui()

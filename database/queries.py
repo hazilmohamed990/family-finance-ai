@@ -29,6 +29,12 @@ class FinanceRepository:
     def get_income_history(self, user_id):
         return self.db.get_income_history(user_id)
 
+    def get_income(self, user_id):
+        return self.db.get_income(user_id)
+
+    def delete_income(self, income_id):
+        return self.db.delete_income(income_id)
+
     def get_financial_data(self, user_id):
         expenses = self.db.get_expenses(user_id)
         income = self.db.get_income_total(user_id)

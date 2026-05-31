@@ -108,6 +108,17 @@ class Database:
         )
         return self.cursor.fetchall()
 
+    def get_income(self, user_id):
+        self.cursor.execute(
+            "SELECT id, amount, source, date FROM income WHERE user_id=? ORDER BY date DESC",
+            (user_id,)
+        )
+        return self.cursor.fetchall()
+
+    def delete_income(self, income_id):
+        self.cursor.execute("DELETE FROM income WHERE id=?", (income_id,))
+        self.conn.commit()
+
     def get_income_total(self, user_id):
         self.cursor.execute("""
         SELECT SUM(amount) FROM income WHERE user_id=?

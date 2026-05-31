@@ -9,7 +9,7 @@ class SavingsTrendChart(QWidget):
     def __init__(self, data_service):
         super().__init__()
         self.data_service = data_service
-        self.figure = Figure(figsize=(5, 3), facecolor="none")
+        self.figure = Figure(figsize=(5, 3), facecolor="none", dpi=120)
         self.canvas = FigureCanvas(self.figure)
         self.ax = self.figure.add_subplot(111)
         self._build_ui()
@@ -40,6 +40,7 @@ class SavingsTrendChart(QWidget):
 
         self.ax.set_xlabel("Month")
         self.ax.set_ylabel("Balance")
+        self.ax.set_xticks(range(len(months)))
         self.ax.set_xticklabels(months, rotation=45, ha="right")
         style_figure(self.figure, self.ax)
         self.canvas.draw()

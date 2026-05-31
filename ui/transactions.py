@@ -194,11 +194,11 @@ class ModernExpensesPage(QWidget):
             expenses = self.repo.get_expenses(1)
             for exp in expenses:
                 row = TransactionRow(
-                    exp.get('id'),
-                    exp.get('date', ''),
-                    exp.get('description', ''),
-                    exp.get('category', ''),
-                    exp.get('amount', 0)
+                    exp[0],
+                    exp[3] if len(exp) > 3 else '',
+                    exp[4] if len(exp) > 4 else '',
+                    exp[1] if len(exp) > 1 else '',
+                    exp[2] if len(exp) > 2 else 0,
                 )
                 row.delete_requested.connect(self.delete_expense)
                 self.expenses_layout.insertWidget(self.expenses_layout.count() - 1, row)
@@ -217,7 +217,7 @@ class ModernExpensesPage(QWidget):
                 QMessageBox.warning(self, "Validation", "Please fill in all fields correctly")
                 return
             
-            self.repo.add_expense(1, amount, description, category, date)
+            self.repo.add_expense(1, category, amount, date, description)
             self.desc_input.clear()
             self.amount_input.setValue(0)
             self.date_input.setDate(QDate.currentDate())
@@ -344,11 +344,11 @@ class ModernIncomePage(QWidget):
             income_items = self.repo.get_income(1)
             for inc in income_items:
                 row = TransactionRow(
-                    inc.get('id'),
-                    inc.get('date', ''),
-                    inc.get('source', ''),
+                    inc[0],
+                    inc[3] if len(inc) > 3 else '',
+                    inc[2] if len(inc) > 2 else '',
                     "Income",
-                    inc.get('amount', 0)
+                    inc[1] if len(inc) > 1 else 0,
                 )
                 row.delete_requested.connect(self.delete_income)
                 self.income_layout.insertWidget(self.income_layout.count() - 1, row)
