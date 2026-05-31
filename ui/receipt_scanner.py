@@ -4,7 +4,7 @@ Modern Receipt Scanner Page
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog,
-    QMessageBox, QScrollArea, QFrame, QCheckBox, QSpinBox
+    QMessageBox, QScrollArea, QFrame, QCheckBox, QSpinBox, QTextEdit
 )
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
@@ -19,6 +19,7 @@ from .camera_dialog import CameraCaptureDialog
 from .components import (
     Card, PrimaryButton, SecondaryButton, VSection, Separator, MetricCard
 )
+from ai.receipt_scanner_impl import ReceiptScanner as OCRReceiptScanner
 
 
 class ReceiptCard(Card):
@@ -105,6 +106,9 @@ class ModernReceiptScannerPage(QWidget):
         self.repo = repo
         self.refresh_callbacks = refresh_callbacks or []
         self.receipts = []
+        self.scanner = OCRReceiptScanner()
+        self.ocr_preview_text = None
+        self.ocr_summary_label = None
         self.init_ui()
     
     def init_ui(self):
@@ -148,7 +152,20 @@ class ModernReceiptScannerPage(QWidget):
         
         upload_section.content_layout.addLayout(upload_layout)
         main_layout.addWidget(upload_section)
-        
+
+        self.ocr_summary_label = QLabel("OCR preview will appear after processing a receipt.")
+        self.ocr_summary_label.setFont(Fonts.body_sm())
+        self.ocr_summary_label.setStyleSheet(f"color: {Colors.TEXT_SECONDARY};")
+        self.ocr_summary_label.setWordWrap(True)
+
+        self.ocr_preview_text = QTextEdit()
+        self.ocr_preview_text.setReadOnly(True)
+        self.ocr_preview_text.setMinimumHeight(200)
+        self.ocr_preview_text.setStyleSheet(f"background-color: {Colors.BG_SECONDARY}; color: {Colors.TEXT_PRIMARY};")
+
+        main_layout.addWidget(self.ocr_summary_label)
+        main_layout.addWidget(self.ocr_preview_text)
+
         main_layout.addWidget(Separator())
         
         # Receipts list
@@ -198,7 +215,7 @@ class ModernReceiptScannerPage(QWidget):
         """Load saved receipts from the database."""
         self._clear_receipt_list()
         try:
-            self.receipts = self.repo.get_receipts(1)
+            self.receipts = self.repo.get_receipts(self.parent_id)
             for row in self.receipts:
                 receipt_id, merchant, date, total, tax, payment_method, image_path, ocr_text = row
                 receipt_data = {
@@ -220,37 +237,17 @@ class ModernReceiptScannerPage(QWidget):
                 widget.setParent(None)
                 widget.deleteLater()
 
-    def _extract_receipt_data(self, file_path: str) -> dict:
-        filename = os.path.basename(file_path)
-        base_name = os.path.splitext(filename)[0].replace("_", " ").title()
-        vendor = base_name if base_name and base_name.lower() != "receipt" else "Local Store"
-        amount = round(20 + (hash(filename) % 180) + 0.99, 2)
-        date = datetime.now().strftime("%Y-%m-%d")
-        items = [
-            "Coffee - $4.50",
-            "Sandwich - $8.25",
-            "Snacks - $6.75",
-            "Bottle Water - $1.49",
-        ]
-        return {
-            "filename": filename,
-            "amount": amount,
-            "date": date,
-            "vendor": vendor,
-            "items": items,
-        }
-
-    def _save_receipt_to_db(self, receipt_path: str, extracted_data: dict):
+    def _save_receipt_to_db(self, receipt_path: str, parsed_result: dict):
         try:
             self.repo.add_receipt(
-                1,
-                extracted_data.get("vendor", "Receipt"),
-                extracted_data.get("date", datetime.now().strftime("%Y-%m-%d")),
-                extracted_data.get("amount", 0.0),
-                tax=0.0,
-                payment_method="Card",
+                self.parent_id,
+                parsed_result.get("merchant") or "Unknown Merchant",
+                parsed_result.get("date") or datetime.now().strftime("%Y-%m-%d"),
+                parsed_result.get("total") or 0.0,
+                tax=parsed_result.get("tax"),
+                payment_method=parsed_result.get("payment_method"),
                 image_path=receipt_path,
-                ocr_text="\n".join(extracted_data.get("items", [])),
+                ocr_text=parsed_result.get("ocr_text", ""),
             )
         except Exception:
             pass
@@ -264,8 +261,21 @@ class ModernReceiptScannerPage(QWidget):
             dest_path = os.path.join(assets_dir, filename)
             shutil.copy(file_path, dest_path)
 
-            extracted_data = self._extract_receipt_data(dest_path)
-            self._save_receipt_to_db(dest_path, extracted_data)
+            parsed = self.scanner.scan(dest_path)
+            self.ocr_summary_label.setText(
+                f"OCR confidence: {parsed.get('confidence_score', 0.0):.1f}. "
+                f"Validation: {parsed.get('validation_message', 'No validation message.')}")
+            self.ocr_preview_text.setText(parsed.get('ocr_text', ''))
+
+            if not parsed.get('valid_receipt'):
+                QMessageBox.warning(self, "No valid receipt detected.", parsed.get('validation_message', 'No valid receipt detected.'))
+                return
+
+            if parsed.get('total') is None:
+                QMessageBox.warning(self, "No valid receipt detected.", "Receipt missing a total amount.")
+                return
+
+            self._save_receipt_to_db(dest_path, parsed)
             self.load_receipts()
             for callback in self.refresh_callbacks:
                 try:

@@ -134,17 +134,40 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # Load and apply SF Pro globally (robust)
-    try:
-        FontManager.load_font()
-        FontManager.apply_to_app(app)
-    except Exception:
-        pass
-    # Apply global stylesheet
-    try:
-        app.setStyleSheet(GLOBAL_STYLESHEET)
-    except Exception:
-        pass
+    FontManager.load_font()
+    app.setStyleSheet(GLOBAL_STYLESHEET)
+
+    # Show login widget first and require authentication.
+    from ui.login.login_page import LoginPage
+
+    login = LoginPage()
+
+    # container to hold the authenticated parent id
+    auth = {"parent_id": None}
+
+    def on_logged_in(pid):
+        auth['parent_id'] = pid
+        # close the login widget (if shown as window)
+        login.close()
+
+    login.logged_in.connect(on_logged_in)
+
+    # If run as standalone, show as dialog-like window and block until login
+    login.setWindowModality(Qt.ApplicationModal)
+    login.show()
+
+    # Run event loop until login completes
+    while auth['parent_id'] is None:
+        app.processEvents()
+
+    # After successful login, launch main window and pass parent id
     window = MainWindow()
+    try:
+        # if DataService or other parts expect a user id, set it here
+        if hasattr(window, 'data_service'):
+            window.data_service.user_id = auth['parent_id']
+    except Exception:
+        pass
+
     window.show()
     sys.exit(app.exec_())

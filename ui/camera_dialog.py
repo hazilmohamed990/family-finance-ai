@@ -42,7 +42,7 @@ class CameraThread(QThread):
             rgb = frame[:, :, ::-1]
             h, w, ch = rgb.shape
             bytes_per_line = ch * w
-            qimg = QImage(rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            qimg = QImage(rgb.tobytes(), w, h, bytes_per_line, QImage.Format_RGB888)
             self.frame_ready.emit(qimg)
             self.msleep(30)
 
