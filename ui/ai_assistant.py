@@ -197,7 +197,7 @@ class ModernAIAssistantPage(QWidget):
             scroll.verticalScrollBar().setValue(scroll.verticalScrollBar().maximum())
         
         if not self.chatbot:
-            error_bubble = MessageBubble("AI assistant unavailable (OpenAI not configured).", is_user=False)
+            error_bubble = MessageBubble("AI assistant unavailable (AI not configured).", is_user=False)
             self.chat_layout.insertWidget(self.chat_layout.count() - 1, error_bubble)
             return
         

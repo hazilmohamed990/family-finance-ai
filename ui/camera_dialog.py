@@ -107,7 +107,38 @@ class CameraCaptureDialog(QDialog):
             QMessageBox.critical(self, "Missing Dependency", "OpenCV (cv2) is not installed. Install opencv-python to use the camera.")
             return
 
-        self.thread = CameraThread(device=self.device)
+        # Auto-detect camera if device is None or -1
+        device_to_use = self.device if self.device is not None and self.device >= 0 else None
+        if device_to_use is None:
+            # Probe a few indices to find the first working camera
+            found = None
+            for idx in range(0, 4):
+                try:
+                    cap = cv2.VideoCapture(idx)
+                    if cap is None or not cap.isOpened():
+                        try:
+                            cap.release()
+                        except Exception:
+                            pass
+                        continue
+                    ret, _ = cap.read()
+                    if ret:
+                        found = idx
+                        try:
+                            cap.release()
+                        except Exception:
+                            pass
+                        break
+                    try:
+                        cap.release()
+                    except Exception:
+                        pass
+                except Exception:
+                    continue
+            device_to_use = found if found is not None else 0
+
+        # Start camera thread with chosen device
+        self.thread = CameraThread(device=device_to_use)
         self.thread.frame_ready.connect(self._on_frame)
         self.thread.start()
 

@@ -203,7 +203,7 @@ class ReceiptScanner(QWidget):
         camera_btn.setFont(Fonts.body_base())
         camera_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {Colors.INCOME};
+                background-color: {Colors.ACCENT};
                 color: white;
                 border: none;
                 border-radius: {BorderRadius.MD}px;

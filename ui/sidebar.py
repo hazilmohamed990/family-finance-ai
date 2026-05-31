@@ -76,7 +76,7 @@ class ModernSidebar(QWidget):
             ("Expenses", "assets/icons/expenses.png", 1),
             ("Income", "assets/icons/income.png", 2),
             ("AI Assistant", "assets/icons/ai.png", 3),
-            ("Receipts", "assets/icons/receipts.png", 4),
+            ("Receipts", "assets/icons/bill.png", 4),
         ]
         
         for i, (name, icon_path, page_idx) in enumerate(nav_pages):

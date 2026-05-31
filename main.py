@@ -134,7 +134,7 @@ class MainWindow(QMainWindow):
         self.chat_area.append(f"You: {message}")
         self.input_line.clear()
         if not self.chatbot:
-            self.chat_area.append('AI assistant unavailable (OpenAI not configured).')
+            self.chat_area.append('AI assistant unavailable (AI not configured).')
             return
         try:
             income, expenses = self.repo.get_financial_data(1)
@@ -545,7 +545,17 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setFont(Fonts.body_base())
+    # Load and apply SF Pro globally (robust)
+    try:
+        FontManager.load_font()
+        FontManager.apply_to_app(app)
+    except Exception:
+        pass
+    # Apply global stylesheet
+    try:
+        app.setStyleSheet(GLOBAL_STYLESHEET)
+    except Exception:
+        pass
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
